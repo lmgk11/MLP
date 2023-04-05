@@ -1,6 +1,7 @@
 
 import tkinter as tk
 import numpy as np
+import os
 
 import MLP 
 
@@ -8,7 +9,7 @@ class DrawingApp:
     def __init__(self, master):
         
         self.nn = MLP.MLP(784, 800, 10)
-        self.nn.load_net('mnist.ps')
+        self.nn.load_net('mnist_3.ps')
 
         self.master = master
         master.title("Drawing App")
@@ -34,12 +35,36 @@ class DrawingApp:
 
     def draw(self, event):
         x, y = event.x, event.y
-        r = 20
+        r = 30 
+        
         self.canvas.create_oval(x-r, y-r, x+r, y+r, fill='black')
         col = x // 30
         row = y // 30
+        
+        #self.canvas.create_rectangle(col * r, row * r, (col+1) * r, (row+1) * r, fill='black')
+
         if col >= 0 and col < 28 and row >= 0 and row < 28:
             self.pixels[row][col] = 1
+            if (0 < col < 27) and (0 < row < 27):
+                if self.pixels[row+1][col] != 1:
+                    self.pixels[row+1][col] = 0.5
+                if self.pixels[row-1][col] != 1:
+                    self.pixels[row-1][col] = 0.5 
+                if self.pixels[row][col+1] != 1:
+                    self.pixels[row][col+1] = 0.5
+                if self.pixels[row][col-1] != 1:
+                    self.pixels[row][col-1] = 0.5
+                if self.pixels[row+1][col+1] != 1:
+                    self.pixels[row+1][col+1] = 0.25
+                if self.pixels[row+1][col-1] != 1:
+                    self.pixels[row+1][col-1] = 0.25
+                if self.pixels[row-1][col+1] != 1:
+                    self.pixels[row-1][col+1] = 0.25
+                if self.pixels[row-1][col-1] != 1:
+                    self.pixels[row-1][col-1] = 0.25
+            os.system('clear')
+            print(f'I think you drew a {self.classify_result(self.nn.feed_forward(np.reshape(self.pixels.flatten(), (-1,1))))}')
+
 
     def clear_canvas(self):
         self.canvas.delete("all")

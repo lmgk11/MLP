@@ -72,3 +72,36 @@ class MLP:
 
     def set_learning_rate(self, lr):
         self.learning_rate = lr
+
+class DNN:
+    def __init__(self, architecture):
+        self.weights = []
+        self.bias = []
+        self.nodes = [int(node) for node in architecture.split('x')]
+
+        for i in range(len(self.nodes) - 1):
+            self.weights.append(np.random.rand(self.nodes[i+1], self.nodes[i]))
+            self.bias.append(np.random.rand(self.nodes[i+1], 1))
+        self.activation_function, self.activation_dfunc = ACTIVATION.sigmoid()
+
+    def feed_forward(self, input, predict=True):
+        
+        hidden = [input]
+        for i, weight in enumerate(self.weights):
+            hidden.append(self.activation_function(np.matmul(weight, hidden[i]) + self.bias[i]))
+        
+        return hidden[-1] if predict else hidden
+
+    def backpropagate(self, inputs, desired):
+        layers = self.feed_forward(inputs, False)
+        
+        try:
+            assert desired.shape == layers[-1].shape 
+        except AssertionError:
+            print('Desired output is of wrong shape.\nExiting...')
+            exit()
+
+        errors = [desired - layers[-1]]
+
+    def print_weights(self):
+        print(self.weights)
