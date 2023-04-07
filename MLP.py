@@ -58,7 +58,6 @@ class MLP:
         if return_output:
             return output
 
-        #print(f'SIZE OF ERROR VECTOR = {np.linalg.norm(output_error)}')
 
     def save_net_to_file(self, FILENAME):
         with open(FILENAME, 'wb') as file:
@@ -74,10 +73,11 @@ class MLP:
         self.learning_rate = lr
 
 class DNN:
-    def __init__(self, architecture):
+    def __init__(self, architecture, LR=0.01):
         self.weights = []
         self.bias = []
         self.nodes = [int(node) for node in architecture.split('x')]
+        self.learning_rate = LR
 
         for i in range(len(self.nodes) - 1):
             self.weights.append(np.random.rand(self.nodes[i+1], self.nodes[i]))
@@ -85,14 +85,17 @@ class DNN:
         self.activation_function, self.activation_dfunc = ACTIVATION.sigmoid()
 
     def feed_forward(self, input, predict=True):
-        
+        self.activation_function, self.activation_dfunc = ACTIVATION.relu()
         hidden = [input]
         for i, weight in enumerate(self.weights):
+            if i == len(self.weights) - 1:
+                self.activation_function, self.activation_dfunc = ACTIVATION.sigmoid()
             hidden.append(self.activation_function(np.matmul(weight, hidden[i]) + self.bias[i]))
+
         
         return hidden[-1] if predict else hidden
 
-    def backpropagate(self, inputs, desired):
+    def backpropagate(self, inputs, desired, return_output = False):
         layers = self.feed_forward(inputs, False)
         
         try:
@@ -100,8 +103,33 @@ class DNN:
         except AssertionError:
             print('Desired output is of wrong shape.\nExiting...')
             exit()
+        
+        #self.activation_function, self.activation_dfunc = ACTIVATION.sigmoid()
+        
+        error = desired - layers[-1]
 
-        errors = [desired - layers[-1]]
+        for i in reversed(list(range(len(layers) - 1))):
+            gradient = self.learning_rate * np.multiply(self.activation_dfunc(layers[i+1]), error)
+            
+            self.weights[i] += np.matmul(gradient, np.transpose(layers[i]))
+            self.bias[i] += gradient 
+
+            error = np.matmul(np.transpose(self.weights[i]), error)
+            
+            self.activation_function, self.activation_dfunc = ACTIVATION.relu()
+        
+        self.activation_function, self.activation_dfunc = ACTIVATION.sigmoid()
+
+        if return_output:
+            return layers[-1]
+
+    def load_net(self, FILENAME):
+        with open(FILENAME, 'rb') as file:
+            self.weights = pickle.load(file)
+
+    def save_net_to_file(self, FILENAME):
+        with open(FILENAME, 'wb') as file:
+            pickle.dump(self.weights, file)
 
     def print_weights(self):
         print(self.weights)
