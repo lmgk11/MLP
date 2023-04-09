@@ -73,15 +73,15 @@ class MLP:
         self.learning_rate = lr
 
 class DNN:
-    def __init__(self, architecture, LR=0.01):
+    def __init__(self, architecture, LR=0.01, scalar=0.0000001):
         self.weights = []
         self.bias = []
         self.nodes = [int(node) for node in architecture.split('x')]
         self.learning_rate = LR
 
         for i in range(len(self.nodes) - 1):
-            self.weights.append(np.random.rand(self.nodes[i+1], self.nodes[i]))
-            self.bias.append(np.random.rand(self.nodes[i+1], 1))
+            self.weights.append(np.random.rand(self.nodes[i+1], self.nodes[i]) * scalar)
+            self.bias.append(np.random.rand(self.nodes[i+1], 1) * scalar)
         self.activation_function, self.activation_dfunc = ACTIVATION.sigmoid()
 
     def feed_forward(self, input, predict=True):
@@ -97,7 +97,6 @@ class DNN:
 
     def backpropagate(self, inputs, desired, return_output = False):
         layers = self.feed_forward(inputs, False)
-        
         try:
             assert desired.shape == layers[-1].shape 
         except AssertionError:
@@ -119,17 +118,16 @@ class DNN:
             self.activation_function, self.activation_dfunc = ACTIVATION.relu()
         
         self.activation_function, self.activation_dfunc = ACTIVATION.sigmoid()
-
         if return_output:
             return layers[-1]
 
     def load_net(self, FILENAME):
         with open(FILENAME, 'rb') as file:
-            self.weights = pickle.load(file)
+            self.weights, self.bias = [item for item in pickle.load(file)]
 
     def save_net_to_file(self, FILENAME):
         with open(FILENAME, 'wb') as file:
-            pickle.dump(self.weights, file)
+            pickle.dump([self.weights, self.bias], file)
 
     def print_weights(self):
         print(self.weights)

@@ -8,8 +8,8 @@ import MLP
 class DrawingApp:
     def __init__(self, master):
         
-        self.nn = MLP.MLP(784, 800, 10)
-        self.nn.load_net('mnist_3.ps')
+        self.nn = MLP.DNN('784x800x10')
+        self.nn.load_net('mnist_dnn_784_800_10.ps')
 
         self.master = master
         master.title("Drawing App")
