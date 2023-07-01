@@ -37,11 +37,8 @@ class MLP:
     def backpropagate(self, input, desired, return_output):
         hidden = self.activation_function(np.matmul(self.weights_input_hidden, input) + self.hidden_bias)
         output = self.activation_function(np.matmul(self.weights_hidden_output, hidden) + self.output_bias)
-        try: 
-            assert output.shape == desired.shape
-        except AssertionError:
-            print(f'Desired output is of wrong shape...\nExpected {output.shape} \nExiting...')
-            exit()
+        
+        assert output.shape == desired.shape
 
         output_error = desired - output 
         gradient = self.activation_dfunc(output)
@@ -80,13 +77,19 @@ class DNN:
         self.learning_rate = LR
 
         for i in range(len(self.nodes) - 1):
-            self.weights.append(np.random.rand(self.nodes[i+1], self.nodes[i]) * scalar)
-            self.bias.append(np.random.rand(self.nodes[i+1], 1) * scalar)
+            self.weights.append(np.random.rand(self.nodes[i+1], self.nodes[i]) * 2))
+            self.bias.append(np.random.rand(self.nodes[i+1], 1))
         self.activation_function, self.activation_dfunc = ACTIVATION.sigmoid()
+        
+        print(self.bias[2].shape, self.weights[2].shape, sep='\n')
 
     def feed_forward(self, input, predict=True):
         self.activation_function, self.activation_dfunc = ACTIVATION.relu()
         hidden = [input]
+        
+        for x in self.bias:
+            print(x.shape)
+
         for i, weight in enumerate(self.weights):
             if i == len(self.weights) - 1:
                 self.activation_function, self.activation_dfunc = ACTIVATION.sigmoid()
@@ -105,13 +108,13 @@ class DNN:
         
         #self.activation_function, self.activation_dfunc = ACTIVATION.sigmoid()
         
-        error = desired - layers[-1]
+        error = -(desired - layers[-1])
 
         for i in reversed(list(range(len(layers) - 1))):
             gradient = self.learning_rate * np.multiply(self.activation_dfunc(layers[i+1]), error)
             
-            self.weights[i] += np.matmul(gradient, np.transpose(layers[i]))
-            self.bias[i] += gradient 
+            self.weights[i] -= np.matmul(gradient, np.transpose(layers[i]))
+            self.bias[i] -= gradient 
 
             error = np.matmul(np.transpose(self.weights[i]), error)
             
